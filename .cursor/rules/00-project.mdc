@@ -1,0 +1,37 @@
+---
+description: Core ERP engineering principles
+alwaysApply: true
+---
+
+# ERP project principles
+
+This repository is a TypeScript monorepo.
+
+Applications:
+
+- `apps/api` is the Node.js backend (`@erp/api`)
+- `apps/web` is the Next.js frontend (`@erp/web`)
+
+Shared packages:
+
+- `@erp/contracts` holds Zod schemas and API transport contracts
+- `@erp/ui` holds reusable UI primitives, layout, patterns, and the future ERP theme
+- `@erp/typescript-config` holds shared TypeScript configuration
+- `@erp/eslint-config` holds shared lint configuration
+- `@erp/test-utils` holds shared test helpers
+
+General engineering rules:
+
+- TypeScript strict mode is mandatory.
+- Never introduce `any` without explicit justification.
+- Prefer `unknown` at external boundaries and validate before use.
+- Organize code primarily by business feature.
+- Reuse existing abstractions before creating new ones.
+- Keep architectural boundaries explicit.
+- Never weaken lint or TypeScript rules merely to make code compile.
+- Run lint, typecheck, architecture checks, and relevant tests after implementation.
+- Do not duplicate API contracts between frontend and backend.
+- External input must always be validated.
+- Material UI is the only primary UI framework. Do not add Tailwind, shadcn/ui, or another styling system.
+- Do not create generic `helpers`, `misc`, `common`, or `utils` folders unless the code has one cohesive purpose.
+- Import shared packages through their public package exports. Do not deep-import package internals.

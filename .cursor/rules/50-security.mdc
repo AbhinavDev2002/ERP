@@ -1,0 +1,18 @@
+---
+description: Security boundaries for code, data, and tooling
+alwaysApply: true
+---
+
+# Security
+
+- Never commit secrets.
+- Never log passwords.
+- Never log authentication tokens.
+- Validate external input before use.
+- Do not expose raw database errors over HTTP.
+- Authentication and authorization are separate concerns.
+- Use least privilege for databases and MCP access.
+- Never connect Cursor to a production database by default.
+- Do not modify production infrastructure or production data unless explicitly instructed.
+
+Local Docker credentials in `.env.example` are development placeholders. They are not production secrets and must not be reused outside local development.

@@ -1,0 +1,12 @@
+node_modules
+.pnpm-store
+dist
+.next
+out
+coverage
+playwright-report
+test-results
+blob-report
+.turbo
+pnpm-lock.yaml
+package-lock.json

@@ -1,0 +1,25 @@
+---
+description: Testing strategy
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Testing
+
+Backend tests should be split into:
+
+- use-case tests with in-memory ports
+- repository integration tests against the real PostgreSQL test database
+- HTTP integration tests through the application
+
+Do not mock the database for repository or HTTP integration tests. The test database is `erp_test` on port `5433`, never the development database.
+
+The first persistence feature must include a test where two repositories share one transaction and rollback undoes both writes.
+
+Frontend behavior that is worth locking in should use Vitest and React Testing Library when those tests are added.
+
+End-to-end coverage uses Playwright. Playwright is not a substitute for use-case or repository tests.
+
+Do not treat a green test suite as proof that architecture boundaries were respected. Run lint, typecheck, and dependency-cruiser as well.
+
+`@erp/test-utils` is for shared test helpers. Do not put product assertions or business fixtures there until a real shared need exists.

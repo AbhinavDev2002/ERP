@@ -1,0 +1,12 @@
+{
+  "extends": "@erp/typescript-config/base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "noEmit": true,
+    "lib": ["ES2022"]
+  },
+  "include": ["src/**/*.ts", "vitest.config.ts"]
+}

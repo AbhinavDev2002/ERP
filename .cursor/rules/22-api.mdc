@@ -1,0 +1,25 @@
+---
+description: HTTP API boundaries
+globs: "apps/api/**/*.ts"
+alwaysApply: false
+---
+
+# API
+
+HTTP is a presentation concern.
+
+Routes and controllers:
+
+- validate external input with Zod
+- call use cases
+- map results and typed application errors to HTTP responses
+
+Do not put business rules in route handlers.
+
+Shared request and response schemas belong in `@erp/contracts`. Infer TypeScript types from those schemas. Do not hand-write a second interface for the same payload.
+
+Do not put domain entities, repository interfaces, aggregates, or Prisma records in `@erp/contracts`.
+
+Do not leak persistence details or raw database errors through the HTTP response.
+
+Authentication and authorization are separate concerns. A request being authenticated does not mean it is authorized for the operation.

@@ -1,0 +1,39 @@
+---
+description: Database ownership, transactions, and future persistence concerns
+globs: "apps/api/**/*.{ts,sql}"
+alwaysApply: false
+---
+
+# Database
+
+PostgreSQL is the system of record. Prisma is the ORM and migration tool.
+
+Ownership:
+
+- The database connection and client belong in `apps/api/src/platform/database`.
+- A module owns its models in a Prisma schema file under `apps/api/prisma/schema/`, for example `customer.prisma`, once that module exists.
+- Domain code does not import Prisma models or `@prisma/client`.
+
+Transactions:
+
+- The use case declares whether it needs a transaction. It does not open one.
+- Transaction behavior opens, commits, and rolls back that transaction.
+- Repositories use the transaction-scoped Prisma client. A global client in the repository does not join the transaction.
+- Nested use cases join the active transaction instead of opening another one.
+- Business audit rows and outbox records that must be atomic with the change are written in that same transaction. Publishing happens after commit.
+- Idempotency is a durable record with a request fingerprint and concurrency protection. It is not a check-then-set cache.
+- The first database-backed use case must prove that two repositories share one transaction and that rollback undoes both writes.
+
+Organization isolation is enforced in authorization and in persistence queries. A controller argument is not sufficient.
+
+The development database and the test database are separate. Integration tests use `TEST_DATABASE_URL`. Do not point tests at the development database.
+
+Do not commit real credentials. Local placeholders live in `.env.example` only.
+
+Future concerns, not implemented yet:
+
+- Auditability will eventually need `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `approvedBy`, `postedBy`, and `cancelledBy`, plus meaningful business change history.
+- Company scope may later need `organizationId`, `companyId`, and `branchId`. Decide the tenancy model before introducing a large number of business tables.
+- Retryable commands with side effects, such as payments, invoice posting, stock movement, and webhooks, may need idempotency. Do not invent that framework until a concrete command needs it.
+
+Do not expose raw database errors over HTTP.

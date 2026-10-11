@@ -1,0 +1,64 @@
+---
+description: Material UI design system rules
+globs: "apps/web/**/*.tsx,packages/ui/**/*.tsx"
+alwaysApply: false
+---
+
+# UI system
+
+Material UI is the design-system foundation. Emotion is used only through MUI. Do not add Tailwind, shadcn/ui, or another visual system.
+
+UI architecture:
+
+```text
+MUI foundation
+-> ERP theme
+-> ERP primitives
+-> ERP layout components
+-> ERP patterns
+-> feature components
+-> pages
+```
+
+Every Material UI import belongs in `@erp/ui`. `apps/web`, including features, `shared/`, and `widgets/`, does not import `@mui/*` or `@emotion/*`. It composes `@erp/ui`.
+
+Reusable primitives, layout, patterns, and the ERP theme belong in `@erp/ui`. Inside that package, do not add an empty wrapper around a MUI component. Add a wrapper only when it provides ERP-wide behavior, defaults, accessibility, variants, styling, or API consistency. Theme overrides are preferred when they are enough.
+
+Future primitives include Button, TextField, Select, Checkbox, Dialog, Drawer, Tabs, Chip, Tooltip, Menu, Table, Autocomplete, and date controls.
+
+Future layout includes Page, PageContent, PageHeader, Stack, Grid, FormGrid, Section, and Container.
+
+Future patterns include DataTable, FilterBar, Pagination, EntityHeader, EntityForm, FormSection, EmptyState, ErrorState, LoadingState, ConfirmDialog, and PermissionGate.
+
+Do not add an empty MUI wrapper inside `@erp/ui`. A wrapper must add behavior, defaults, accessibility, variants, styling, or a stable API.
+
+Before creating a generic UI component:
+
+1. Inspect MUI itself.
+2. Inspect `@erp/ui` primitives.
+3. Inspect `@erp/ui` layout.
+4. Inspect `@erp/ui` patterns.
+5. Only then introduce a new abstraction.
+
+Styling hierarchy:
+
+```text
+theme tokens
+-> theme component overrides and variants
+-> reusable @erp/ui components
+-> MUI sx or styled for local exceptions
+```
+
+Prefer semantic palette tokens such as `primary`, `error`, `background.default`, `background.paper`, `text.primary`, `text.secondary`, and `divider`.
+
+Prefer `theme.spacing(...)` and `theme.breakpoints.up(...)` or `theme.breakpoints.down(...)`. Use responsive props and breakpoint objects instead of custom pixel logic.
+
+Feature components must not repeatedly invent colors, spacing scales, typography, breakpoints, radii, elevations, generic loading states, generic tables, or generic form layout.
+
+`@erp/ui` must not import `apps/web` or `apps/api`.
+
+`@erp/ui` stays free of React Hook Form and free of ERP domain types. Generic field adapters live in `apps/web/src/shared/forms`. Feature forms bind them inside the feature.
+
+Repeated page chrome (`PageLayout`, `PageHeader`, `PageContent`) belongs in `@erp/ui` layout so features do not copy margins, widths, and action alignment.
+
+A data grid is a later decision. Do not build a custom grid framework before an existing library is tried against a real ERP table. The grid engine must not know what an invoice or customer is.

@@ -1,0 +1,1434 @@
+# ERP repository bootstrap
+
+The workspace root is already:
+
+`C:\Abhinav\ERP`
+
+All files must be created inside this existing root.
+
+Do not create a nested `erp/erp` or `ERP/ERP` folder.
+
+This pass creates the engineering factory only:
+
+- monorepo structure
+- package manifests
+- strict TypeScript configuration
+- frontend/backend tooling
+- PostgreSQL local environments
+- testing configuration
+- architecture enforcement
+- architecture documentation
+- Cursor rules
+- Cursor skills
+- Cursor agents
+
+Do not implement ERP business functionality in this pass.
+
+## Important frontend decision
+
+The frontend UI library is **Material UI (MUI)**.
+
+Do not install or use Tailwind CSS.
+
+Do not use shadcn/ui.
+
+Do not create Tailwind configuration.
+
+Do not generate Tailwind utility classes.
+
+Do not introduce another styling framework alongside MUI.
+
+Use MUI as the primary design-system foundation.
+
+The frontend architecture should be built around:
+
+- `@mui/material`
+- `@mui/icons-material`
+- Emotion through MUI's default styling system
+- MUI Theme
+- MUI `sx`
+- MUI `styled`
+- reusable ERP-level components built on top of MUI
+
+Prefer reusable theme configuration and component variants over repeatedly writing ad-hoc `sx` styling.
+
+---
+
+# 1. Repository architecture
+
+Create:
+
+```text
+ERP/
+├── apps/
+│   ├── api/
+│   └── web/
+├── packages/
+│   ├── contracts/
+│   ├── ui/
+│   ├── typescript-config/
+│   ├── eslint-config/
+│   └── test-utils/
+├── docs/
+│   ├── architecture/
+│   └── adr/
+├── tooling/
+├── .cursor/
+├── AGENTS.md
+├── package.json
+├── pnpm-workspace.yaml
+├── turbo.json
+├── tsconfig.json
+├── docker-compose.yml
+├── .editorconfig
+├── .gitattributes
+├── .gitignore
+└── README.md
+```
+
+Use pnpm workspaces and Turborepo.
+
+Package names:
+
+```text
+@erp/api
+@erp/web
+@erp/contracts
+@erp/ui
+@erp/typescript-config
+@erp/eslint-config
+@erp/test-utils
+```
+
+---
+
+# 2. Root tooling
+
+Initialize pnpm using Corepack when possible.
+
+If Windows permissions prevent `corepack enable`, use the already-installed pnpm binary and document this in README.
+
+Install at the repository root:
+
+- Turborepo
+- TypeScript
+- ESLint
+- Prettier
+- dependency-cruiser
+- Playwright
+
+Create root scripts for:
+
+```text
+dev
+build
+lint
+typecheck
+test
+format
+format:check
+arch
+verify
+```
+
+`verify` should run the repository's complete deterministic verification pipeline.
+
+Conceptually:
+
+```text
+format:check
+→ lint
+→ typecheck
+→ architecture validation
+→ tests
+→ build
+```
+
+Do not rely on Cursor manually remembering individual commands.
+
+---
+
+# 3. Workspace configuration
+
+Create:
+
+`pnpm-workspace.yaml`
+
+with:
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+Configure Turborepo for:
+
+- dev
+- build
+- lint
+- typecheck
+- test
+
+Configure task dependencies and outputs intentionally.
+
+Do not create a meaningless default Turbo configuration.
+
+---
+
+# 4. Node and package manager consistency
+
+Add the active pnpm version to root `package.json` using `packageManager`.
+
+Specify an appropriate supported Node version through `engines` and/or `.nvmrc`.
+
+The project should behave consistently across:
+
+- Windows developer machines
+- other developer machines
+- CI
+
+Add `.editorconfig`.
+
+Add `.gitattributes` and normalize source files to LF line endings to avoid Windows CRLF noise.
+
+---
+
+# 5. Strict TypeScript configuration
+
+Create:
+
+```text
+packages/typescript-config/
+```
+
+with a shared `base.json`.
+
+Enable:
+
+```json
+{
+  "strict": true,
+  "noUncheckedIndexedAccess": true,
+  "exactOptionalPropertyTypes": true,
+  "noImplicitOverride": true,
+  "noFallthroughCasesInSwitch": true,
+  "useUnknownInCatchVariables": true,
+  "noImplicitReturns": true,
+  "forceConsistentCasingInFileNames": true,
+  "verbatimModuleSyntax": true,
+  "isolatedModules": true,
+  "skipLibCheck": true
+}
+```
+
+Root and app TypeScript configs should extend the shared configuration.
+
+Do not weaken TypeScript configuration to make generated code compile.
+
+Avoid:
+
+- `any`
+- `@ts-ignore`
+- unsafe assertions
+- duplicate handwritten types when they can be inferred
+
+Use `unknown` at unsafe/external boundaries and validate before use.
+
+---
+
+# 6. Backend setup
+
+Create:
+
+```text
+apps/api/
+```
+
+Package name:
+
+```text
+@erp/api
+```
+
+Install:
+
+Runtime:
+
+- Fastify
+- Zod
+- dotenv
+- Pino
+- Drizzle ORM
+- pg
+
+Development:
+
+- drizzle-kit
+- tsx
+- Vitest
+- TypeScript
+- Node types
+- pg types
+
+Do not create a Fastify server yet.
+
+Do not create:
+
+- `main.ts`
+- health routes
+- controllers
+- repositories
+- entities
+- use cases
+- business schemas
+- routes
+
+Create only:
+
+```text
+apps/api/src/
+├── modules/
+├── core/
+└── platform/
+```
+
+Keep these empty using minimal `.gitkeep` files where necessary.
+
+Do not pre-create full Customer module internals in this factory pass.
+
+The first real Customer vertical slice will establish the canonical module implementation later.
+
+---
+
+# 7. Backend architecture
+
+Document and enforce:
+
+```text
+presentation
+      ↓
+application
+      ↓
+domain
+```
+
+Infrastructure implements ports required by application/domain.
+
+Add a composition boundary concept:
+
+```text
+composition
+    ↓
+presentation
+application
+infrastructure
+```
+
+Concrete dependency wiring belongs at the composition boundary.
+
+The domain must not depend on:
+
+- Fastify
+- Drizzle
+- PostgreSQL libraries
+- HTTP
+- presentation code
+- infrastructure code
+- framework-specific APIs
+
+Application/use-case code must not directly depend on HTTP requests/responses.
+
+Use cases must not directly issue Drizzle queries.
+
+Controllers must not contain business rules.
+
+---
+
+# 8. Core versus platform
+
+Document the difference explicitly.
+
+`core/` is for truly framework-independent application/domain abstractions such as future concepts like:
+
+```text
+Entity
+AggregateRoot
+DomainEvent
+Result
+Pagination
+ApplicationError
+```
+
+Do not create these implementations in this pass.
+
+`platform/` is for technical capabilities such as future:
+
+```text
+database
+logging
+cache
+event infrastructure
+configuration
+observability
+```
+
+Do not use `core` as a dumping ground for random shared utilities.
+
+Avoid generic folders/files such as:
+
+```text
+helpers
+misc
+common
+utils
+```
+
+unless there is a clear cohesive purpose.
+
+---
+
+# 9. Next.js application
+
+Create `apps/web` using Next.js App Router with:
+
+- TypeScript
+- ESLint
+- `src/`
+- App Router
+- Turbopack
+- `@/*` import alias
+
+Do **not** enable Tailwind.
+
+If `create-next-app` creates Tailwind files accidentally, remove Tailwind dependencies/configuration and ensure the application does not depend on Tailwind.
+
+Rename package to:
+
+```text
+@erp/web
+```
+
+Make its TypeScript config extend the shared strict config.
+
+Create empty architectural folders:
+
+```text
+apps/web/src/
+├── app/
+├── features/
+├── components/
+├── providers/
+├── hooks/
+└── lib/
+```
+
+Keep the normal Next.js scaffold where required.
+
+Do not create ERP screens or feature pages in this pass.
+
+---
+
+# 10. Material UI setup
+
+Install on `@erp/web`:
+
+```text
+@mui/material
+@mui/icons-material
+@emotion/react
+@emotion/styled
+```
+
+Also install:
+
+```text
+@tanstack/react-query
+react-hook-form
+@hookform/resolvers
+zod
+```
+
+Do not install:
+
+```text
+tailwindcss
+@tailwindcss/*
+class-variance-authority
+tailwind-merge
+shadcn/ui
+```
+
+Do not install Zustand in this initial pass.
+
+Add Zustand later only if a concrete cross-feature client-state requirement exists.
+
+Do not create a Query provider yet.
+
+Do not create an MUI ThemeProvider implementation yet unless required by the minimal Next.js/MUI setup.
+
+If a minimal integration file is technically required for correct MUI operation with the chosen Next.js version, keep it infrastructure-only and do not introduce ERP design decisions yet.
+
+---
+
+# 11. Frontend UI architecture
+
+The frontend design system must use MUI as its base.
+
+Architecture:
+
+```text
+MUI foundation
+      ↓
+ERP theme
+      ↓
+ERP primitives
+      ↓
+ERP layout components
+      ↓
+ERP patterns
+      ↓
+feature components
+      ↓
+pages
+```
+
+Future `@erp/ui` components should wrap or compose MUI where useful rather than reinventing low-level accessible controls.
+
+Examples of future primitives:
+
+```text
+Button
+TextField
+Select
+Checkbox
+Dialog
+Drawer
+Tabs
+Chip
+Tooltip
+Menu
+Table
+Autocomplete
+Date controls
+```
+
+Examples of ERP layout components:
+
+```text
+Page
+PageContent
+PageHeader
+Stack
+Grid
+FormGrid
+Section
+Container
+```
+
+Examples of ERP patterns:
+
+```text
+DataTable
+FilterBar
+Pagination
+EntityHeader
+EntityForm
+FormSection
+EmptyState
+ErrorState
+LoadingState
+ConfirmDialog
+PermissionGate
+```
+
+Do not implement these in this pass.
+
+Create only the package-level folders.
+
+---
+
+# 12. MUI styling rules
+
+Add strong Cursor guidance for MUI.
+
+The default styling hierarchy should be:
+
+```text
+Theme tokens
+    ↓
+Theme component overrides / variants
+    ↓
+Reusable @erp/ui components
+    ↓
+MUI sx/styled for local exceptions
+```
+
+Avoid repeated values like:
+
+```text
+#1976d2
+12px
+16px
+24px
+specific shadows
+custom breakpoints
+```
+
+throughout feature code when they should be represented by theme tokens.
+
+Use semantic theme concepts.
+
+Examples:
+
+```text
+primary
+secondary
+error
+warning
+success
+info
+background.default
+background.paper
+text.primary
+text.secondary
+divider
+```
+
+Prefer MUI spacing:
+
+```ts
+theme.spacing(...)
+```
+
+and MUI breakpoints:
+
+```ts
+theme.breakpoints.up(...)
+theme.breakpoints.down(...)
+```
+
+over custom pixel-based responsive logic.
+
+Feature components should not repeatedly invent:
+
+- colors
+- spacing scales
+- typography
+- breakpoints
+- border radii
+- elevations
+- generic loading states
+- generic tables
+- generic form layout
+
+These concerns should eventually live in the MUI theme or `@erp/ui`.
+
+---
+
+# 13. Responsive UI architecture
+
+Use MUI's responsive system.
+
+Prefer responsive props and theme breakpoints.
+
+Examples of future patterns:
+
+```tsx
+<Grid
+  container
+  spacing={2}
+/>
+```
+
+and responsive MUI values such as:
+
+```tsx
+sx={{
+  display: {
+    xs: "block",
+    md: "flex"
+  }
+}}
+```
+
+but avoid scattering repetitive responsive logic through every feature.
+
+Repeated responsive patterns should become reusable layout abstractions inside `@erp/ui`.
+
+Feature developers should primarily compose layout components rather than reinvent responsiveness.
+
+---
+
+# 14. `@erp/ui`
+
+Create:
+
+```text
+packages/ui/
+└── src/
+    ├── primitives/
+    ├── layout/
+    ├── patterns/
+    ├── theme/
+    └── index.ts
+```
+
+Do not pre-create:
+
+```text
+button/
+input/
+table/
+...
+```
+
+directories until those components actually exist.
+
+`theme/` will later contain the ERP MUI theme structure.
+
+Potential future structure:
+
+```text
+theme/
+├── create-theme.ts
+├── palette.ts
+├── typography.ts
+├── spacing.ts
+├── shape.ts
+└── components/
+```
+
+Do not implement the full theme in this factory pass.
+
+Document the intended structure in `docs/architecture/frontend.md`.
+
+`@erp/ui` must not import from:
+
+```text
+apps/web
+apps/api
+```
+
+Keep it application-independent.
+
+---
+
+# 15. Frontend state ownership
+
+Create Cursor rules describing:
+
+```text
+server state
+→ TanStack Query
+
+shareable route/filter state
+→ URL/searchParams
+
+form state
+→ React Hook Form
+
+local transient state
+→ useState/useReducer
+
+cross-feature client state
+→ add a dedicated state solution only when justified
+```
+
+Do not store ordinary API/server data in a global client store.
+
+Do not introduce Zustand merely because it is convenient.
+
+---
+
+# 16. Shared contracts package
+
+Create:
+
+```text
+packages/contracts/
+└── src/
+    ├── common/
+    └── index.ts
+```
+
+`index.ts` should contain only:
+
+```ts
+export {};
+```
+
+Do not create Customer contracts yet.
+
+The contracts package is for shared transport/API boundaries.
+
+Future examples:
+
+```text
+CreateCustomerRequest
+CustomerResponse
+CustomerListResponse
+ApiError
+PaginationRequest
+PaginatedResponse
+```
+
+Do not put backend domain entities in this package.
+
+Do not put:
+
+- Drizzle table definitions
+- repository interfaces
+- domain services
+- aggregates
+- ORM records
+
+inside `@erp/contracts`.
+
+Prefer schema-first contracts using Zod.
+
+When a Zod contract exists, TypeScript types should normally be inferred using `z.infer`.
+
+---
+
+# 17. Internal package boundaries
+
+Configure package exports for:
+
+```text
+@erp/contracts
+@erp/ui
+@erp/test-utils
+```
+
+Avoid deep imports through package internals.
+
+Application code should import from intentional public package APIs.
+
+Keep shared packages source-consumed consistently within the monorepo unless a later decision introduces package build outputs.
+
+Do not mix source-consumed and independently-built package strategies without an explicit architecture decision.
+
+---
+
+# 18. Backend module public boundaries
+
+Document that future backend modules must expose intentional public APIs.
+
+Other modules should not casually deep-import:
+
+```text
+module/infrastructure/*
+module/presentation/*
+module/internal/*
+```
+
+Cross-module communication should use intentional public APIs, application ports, or domain/application events where appropriate.
+
+---
+
+# 19. Frontend feature boundaries
+
+Future feature code belongs under:
+
+```text
+apps/web/src/features/<feature>
+```
+
+Pages under `app/` should primarily compose features.
+
+Do not put large business implementations inside Next.js route files.
+
+Cross-feature imports must use a feature's public API rather than deep-importing internal feature files.
+
+Example future desired import:
+
+```ts
+import { CustomerPicker } from "@/features/customers";
+```
+
+Avoid:
+
+```ts
+import { CustomerPicker }
+  from "@/features/customers/components/internal/customer-picker";
+```
+
+across feature boundaries.
+
+---
+
+# 20. Database setup
+
+Create `docker-compose.yml` with PostgreSQL 17.
+
+Create two isolated services:
+
+Development database:
+
+```text
+port: 5432
+database: erp
+```
+
+Test database:
+
+```text
+port: 5433
+database: erp_test
+```
+
+Use local development placeholder credentials:
+
+```text
+user: erp
+password: erp
+```
+
+Add health checks.
+
+Use named Docker volumes where appropriate.
+
+Create `.env.example` with local-development example values only.
+
+`.env.example` must never contain real production credentials.
+
+Gitignore `.env`.
+
+Provide:
+
+```text
+DATABASE_URL
+TEST_DATABASE_URL
+```
+
+for local use.
+
+---
+
+# 21. Drizzle
+
+Create Drizzle configuration for `apps/api`.
+
+Do not define any business tables yet.
+
+The intended future ownership model is:
+
+- database connection/client → `platform/database`
+- module-owned persistence definitions → module infrastructure
+
+Example future structure:
+
+```text
+modules/customer/infrastructure/persistence/customer.table.ts
+```
+
+Do not implement this yet.
+
+Document this intended approach in `docs/architecture/database.md`.
+
+---
+
+# 22. Transactions
+
+Document the architectural rule:
+
+Transaction boundaries belong at the application/use-case orchestration level.
+
+Transaction mechanics belong behind infrastructure/platform abstractions.
+
+Repositories should not independently create unrelated transaction boundaries for a use case requiring atomic behavior.
+
+Do not implement transaction abstractions in this factory pass.
+
+---
+
+# 23. Testing tooling
+
+Configure:
+
+Backend:
+
+```text
+Vitest
+```
+
+Frontend:
+
+```text
+Vitest-compatible setup where needed later
+```
+
+E2E:
+
+```text
+Playwright
+```
+
+Do not create product behavior tests in this pass.
+
+Document the future backend test strategy:
+
+```text
+use-case tests
++
+real test-database repository integration tests
++
+HTTP integration tests
+```
+
+Avoid an architecture that mocks everything.
+
+The test database must be separate from development.
+
+---
+
+# 24. Architecture enforcement
+
+Configure dependency-cruiser.
+
+Fail when:
+
+1. `apps/api` domain imports infrastructure
+2. `apps/api` domain imports presentation
+3. domain imports Fastify
+4. domain imports Drizzle
+5. `packages/ui` imports `apps/web`
+6. `packages/ui` imports `apps/api`
+7. `packages/contracts` imports `apps/web`
+8. `packages/contracts` imports `apps/api`
+9. `apps/api` imports `packages/ui`
+10. circular dependencies occur
+
+Prepare the architecture so future feature-to-feature deep imports can also be restricted.
+
+Architecture should be mechanically enforced where practical, not merely documented.
+
+---
+
+# 25. MUI-specific architecture enforcement
+
+Cursor rules should explicitly prohibit:
+
+- Tailwind utility classes
+- Tailwind config
+- shadcn/ui
+- parallel CSS design systems
+- arbitrary hardcoded visual values when theme tokens exist
+- recreating MUI components without justification
+- feature-specific copies of reusable UI primitives
+
+Before creating a new generic UI component later:
+
+1. inspect MUI itself
+2. inspect `@erp/ui/primitives`
+3. inspect `@erp/ui/layout`
+4. inspect `@erp/ui/patterns`
+5. only then introduce a new abstraction
+
+Do not wrap every MUI component merely for the sake of wrapping it.
+
+Create a wrapper only when it provides meaningful ERP-wide behavior, defaults, accessibility, variants, styling, or API consistency.
+
+---
+
+# 26. Cursor rules
+
+Create:
+
+```text
+.cursor/rules/
+├── 00-project.mdc
+├── 01-typescript.mdc
+├── 10-architecture.mdc
+├── 20-backend.mdc
+├── 21-database.mdc
+├── 22-api.mdc
+├── 30-frontend.mdc
+├── 31-ui-system.mdc
+├── 32-state-management.mdc
+├── 40-testing.mdc
+└── 50-security.mdc
+```
+
+Important frontend rules:
+
+- Next.js App Router
+- MUI is the only primary UI framework
+- no Tailwind
+- pages compose features
+- generic UI belongs in `@erp/ui`
+- feature-specific UI belongs in `apps/web/src/features`
+- use theme-based styling
+- prefer MUI responsive capabilities
+- use TanStack Query for server state
+- use React Hook Form for forms
+- use shared Zod contracts where appropriate
+- avoid duplicate API interfaces
+
+---
+
+# 27. Cursor skills
+
+Create:
+
+```text
+.cursor/skills/
+├── create-backend-feature/
+├── create-frontend-feature/
+├── write-tests/
+└── review-feature/
+```
+
+Each contains `SKILL.md`.
+
+The frontend feature skill must explicitly instruct the agent to:
+
+1. inspect the API contract
+2. inspect existing MUI theme/components
+3. inspect `@erp/ui`
+4. search existing feature components
+5. reuse existing abstractions
+6. implement feature API functions
+7. implement query/mutation hooks
+8. implement feature components
+9. keep pages thin
+10. verify responsive behavior using MUI conventions
+11. run tests/typecheck/lint/build
+
+It must prohibit introducing Tailwind.
+
+---
+
+# 28. Cursor agents
+
+Create:
+
+```text
+.cursor/agents/
+├── architect.md
+├── verifier.md
+└── test-reviewer.md
+```
+
+`architect.md` should review:
+
+- domain boundaries
+- package boundaries
+- contracts
+- persistence impact
+- frontend feature boundaries
+- MUI reuse opportunities
+- security
+- tests
+
+`verifier.md` should independently verify:
+
+- requirements
+- architectural boundaries
+- strict TypeScript
+- duplicated abstractions
+- MUI conventions
+- absence of Tailwind
+- external input validation
+- tests
+- lint
+- typecheck
+- build
+
+The verifier must not assume passing tests prove the implementation is correct.
+
+`test-reviewer.md` should describe the future expected backend test split:
+
+```text
+use-case tests
+repository integration tests using real test PostgreSQL
+HTTP integration tests
+```
+
+---
+
+# 29. AGENTS.md
+
+Create:
+
+```text
+AGENTS.md
+apps/api/AGENTS.md
+apps/web/AGENTS.md
+packages/ui/AGENTS.md
+```
+
+Root documentation should explain the repository architecture.
+
+`apps/web/AGENTS.md` must state prominently:
+
+```text
+MUI is the frontend design-system foundation.
+
+Do not use Tailwind.
+
+Generic UI belongs in @erp/ui.
+
+Domain/feature UI belongs under src/features.
+
+Pages primarily compose features.
+
+Use theme tokens and reusable components before introducing custom styling.
+```
+
+`packages/ui/AGENTS.md` should explain:
+
+```text
+MUI foundation
+→ ERP theme
+→ primitives
+→ layout
+→ patterns
+```
+
+---
+
+# 30. Architecture documentation
+
+Create:
+
+```text
+docs/architecture/
+├── overview.md
+├── backend.md
+├── frontend.md
+├── contracts.md
+├── database.md
+└── testing.md
+```
+
+`frontend.md` must describe the MUI architecture in depth.
+
+It should describe:
+
+```text
+MUI
+ ↓
+ERP theme
+ ↓
+UI primitives
+ ↓
+layout abstractions
+ ↓
+ERP patterns
+ ↓
+feature components
+ ↓
+Next.js routes
+```
+
+Explain why Tailwind is intentionally not used.
+
+Explain when to use:
+
+- MUI component props
+- theme values
+- `sx`
+- `styled`
+- theme component variants
+- reusable `@erp/ui` abstractions
+
+---
+
+# 31. ADRs
+
+Create:
+
+```text
+docs/adr/
+├── 001-modular-monolith.md
+├── 002-typescript-end-to-end.md
+├── 003-postgresql.md
+├── 004-fastify.md
+├── 005-drizzle.md
+├── 006-shared-contracts.md
+└── 007-material-ui.md
+```
+
+ADR `007-material-ui.md` should state:
+
+Decision:
+
+Use Material UI as the primary frontend component and design-system library.
+
+Consequences:
+
+- MUI provides accessible low-level UI components.
+- ERP visual consistency is controlled through an application theme.
+- reusable ERP abstractions are built in `@erp/ui`.
+- feature components consume `@erp/ui` and MUI appropriately.
+- Tailwind is not used.
+- shadcn/ui is not used.
+- avoid introducing competing styling systems.
+
+---
+
+# 32. Security guidance
+
+`.cursor/rules/50-security.mdc` must state:
+
+- never commit secrets
+- never log passwords
+- never log authentication tokens
+- validate external input
+- do not expose raw database errors over HTTP
+- authentication and authorization are separate concerns
+- use least privilege for databases and MCP access
+- never connect Cursor to a production database by default
+- do not modify production infrastructure or production data unless explicitly instructed
+
+---
+
+# 33. ERP future architectural concerns
+
+Document, but do not implement:
+
+## Auditability
+
+ERP operations will eventually need first-class auditability including concepts such as:
+
+```text
+createdAt
+updatedAt
+createdBy
+updatedBy
+approvedBy
+postedBy
+cancelledBy
+```
+
+along with meaningful business change history.
+
+Do not implement the audit model yet.
+
+## Organization/company scope
+
+ERP business persistence may later need:
+
+```text
+organizationId
+companyId
+branchId
+```
+
+The tenancy/company model must be decided before large numbers of business tables are introduced.
+
+Do not add these fields yet.
+
+## Idempotency
+
+Externally retryable commands with meaningful side effects may require idempotency.
+
+Examples include future:
+
+- payment creation
+- invoice posting
+- stock movement
+- webhook handling
+
+Do not implement an idempotency framework yet.
+
+---
+
+# 34. MCP configuration
+
+Create local Cursor MCP configuration only if supported cleanly by the local environment.
+
+Potential integrations:
+
+- GitHub
+- development PostgreSQL only
+- Playwright/browser tooling
+
+Do not configure a production database.
+
+Do not commit real credentials.
+
+Repository functionality, tests, and CI must not depend on MCP availability.
+
+MCP is developer tooling, not part of core application architecture.
+
+---
+
+# 35. Hooks
+
+Create:
+
+```text
+.cursor/hooks.json
+```
+
+as a valid empty hooks configuration.
+
+Do not introduce automatic hook behavior in this first pass.
+
+---
+
+# 36. Out of scope
+
+Do not create:
+
+- domain entities
+- value objects
+- use cases
+- repositories
+- controllers
+- routes
+- API contracts
+- Zod business schemas
+- business database tables
+- ERP pages
+- ERP forms
+- ERP tables
+- MUI ERP components
+- MUI ERP theme implementation
+- TanStack Query provider
+- business hooks
+- feature state
+- product behavior tests
+- Fastify `main.ts`
+
+This pass establishes the factory only.
+
+---
+
+# 37. Verification
+
+When implementation is complete:
+
+1. run package installation
+2. run formatting check
+3. run lint
+4. run TypeScript typecheck
+5. run dependency-cruiser architecture validation
+6. run configured tests
+7. run builds
+8. verify Next.js does not depend on Tailwind
+9. verify MUI dependencies are present
+10. verify no business functionality has been accidentally generated
+11. inspect Git status
+
+Do not weaken configuration merely to make verification pass.
+
+Fix legitimate issues.
+
+Do not create a Git commit until verification succeeds.
+
+At the end, report:
+
+- files created
+- packages installed
+- architecture rules established
+- verification commands executed
+- verification results
+- any deviations from this plan and why
+
+The intended baseline commit message after human review is:
+
+`chore: initialize ERP architecture`

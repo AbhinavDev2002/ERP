@@ -1,0 +1,31 @@
+---
+description: Frontend state ownership
+globs: "apps/web/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# State ownership
+
+Use:
+
+- TanStack Query for server state, with query option factories in the feature `api/` folder
+- URL search params and route params for shareable route and filter state
+- React Hook Form for form state inside the feature
+- `useState` or `useReducer` for local temporary state
+- lifting state or a scoped context for state shared by nearby components
+
+`useEffect` synchronizes with an external system when that is required. It is not a place to store state, and it is not the way to fetch ordinary API data. Use TanStack Query for server data.
+
+Query keys that return tenant data include the organization, and the company or branch when that scope changes the result. Isolating the browser cache is not a substitute for Fastify authorization.
+
+Interactive lists, filters, and forms are Client Components. The App Router file renders one feature screen.
+
+Do not prefetch every screen from the server until one screen shows that it helps.
+
+Add a dedicated cross-feature client store only when a concrete requirement cannot live in the server, the URL, a form, or local component state.
+
+Do not store ordinary API or server data in a global client store.
+
+Do not add Zustand unless that cross-feature requirement exists.
+
+Prefer server components where they simplify the architecture, and client components where interactivity requires them.

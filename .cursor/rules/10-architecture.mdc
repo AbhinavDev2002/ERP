@@ -1,0 +1,64 @@
+---
+description: ERP architectural boundaries
+alwaysApply: true
+---
+
+# Architecture
+
+The backend is a modular monolith.
+
+Dependencies must flow inward.
+
+Backend layers:
+
+```text
+presentation -> application -> domain
+```
+
+Infrastructure implements ports required by application and domain.
+
+Concrete dependency wiring belongs at a composition boundary:
+
+```text
+composition
+    -> presentation
+    -> application
+    -> infrastructure
+```
+
+The domain layer must not import:
+
+- Fastify
+- Prisma
+- PostgreSQL libraries
+- Redis
+- HTTP concepts
+- presentation code
+- infrastructure code
+- framework-specific code
+
+Application code must not depend directly on HTTP requests or responses.
+
+Controllers must not contain business logic.
+
+Use cases must not directly query the database and must not open a Prisma transaction. They declare whether a transaction is required. Transaction behavior coordinates it. See `docs/architecture/execution.md`.
+
+Repository implementations belong in infrastructure and use the transaction-scoped client when a transaction is active.
+
+`apps/api/src/core` is for framework-independent application and domain abstractions. Do not put technical adapters there.
+
+`apps/api/src/platform` is for technical capabilities such as database access, logging, cache, events, configuration, and observability.
+
+Business modules must expose intentional public APIs. Other modules must not casually deep-import `infrastructure`, `presentation`, or `internal` files.
+
+Cross-module communication uses a public module API, an application port, or a domain or application event.
+
+Frontend features live under `apps/web/src/features/<feature>`. Cross-feature imports use that feature's public API, for example `@/features/customers`, not a deep internal path.
+
+`@erp/ui` must not import `apps/web` or `apps/api`.
+
+`@erp/contracts` must not import either application.
+
+`apps/api` must not import `@erp/ui`.
+
+Prefer explicit module boundaries over convenience.

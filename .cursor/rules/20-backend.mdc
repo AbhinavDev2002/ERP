@@ -1,0 +1,59 @@
+---
+description: Node backend conventions
+globs: "apps/api/**/*.ts"
+alwaysApply: false
+---
+
+# Backend
+
+Backend framework: Fastify.
+
+Validation: Zod.
+
+Persistence: PostgreSQL with Prisma.
+
+Logging: Pino.
+
+Structure future features under:
+
+```text
+apps/api/src/modules/<feature>/
+```
+
+Each business feature should generally contain:
+
+- `domain/`
+- `application/`
+- `infrastructure/`
+- `presentation/`
+- a composition entry such as `<feature>.module.ts`
+- `index.ts` as the only public module API
+
+Controllers:
+
+- parse transport data
+- call the use case executor
+- translate results to HTTP responses
+
+Use cases:
+
+- represent a business or application operation
+- coordinate entities and ports
+- remain framework independent
+- declare whether the operation needs a transaction
+- do not open a Prisma transaction
+
+Repositories:
+
+- access persistence through interfaces
+- keep ORM details inside infrastructure
+- use the transaction-scoped Prisma client when a transaction is active
+- must not keep a separate global client for work that belongs in that transaction
+
+Controllers call the use case executor. They do not contain business rules. See `docs/architecture/execution.md`.
+
+Do not call the Prisma client directly from controllers or use cases.
+
+Do not import Fastify or Prisma inside domain code.
+
+New business capabilities should normally be created inside a feature module and registered from the composition boundary.

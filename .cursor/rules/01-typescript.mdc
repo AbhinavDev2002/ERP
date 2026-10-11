@@ -1,0 +1,30 @@
+---
+description: TypeScript conventions
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript
+
+Use strict TypeScript.
+
+Avoid:
+
+- `any`
+- `@ts-ignore`
+- unsafe assertions
+- duplicated interfaces
+- magic strings when a domain type is appropriate
+
+Prefer:
+
+- discriminated unions
+- readonly data where appropriate
+- exhaustive switch statements
+- explicit return types on architectural boundaries
+- schema inference from Zod
+- `unknown` for untrusted data
+
+Do not create a manual TypeScript interface if the canonical type can be inferred from an existing schema with `z.infer`.
+
+Do not weaken `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, or the other shared compiler flags to make code compile.

@@ -1,0 +1,85 @@
+---
+description: Next.js frontend architecture
+globs: "apps/web/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Frontend
+
+Use the Next.js App Router.
+
+Material UI is the only primary UI framework, and it is used only inside `@erp/ui`. `apps/web` does not import `@mui/*` or `@emotion/*`.
+
+Do not use:
+
+- Tailwind CSS
+- Tailwind utility classes
+- shadcn/ui
+- a second styling framework
+
+`app/**/page.tsx` is the Next.js route entry. It may read route params and render one feature screen. It does not hold the screen, the form, or the table.
+
+Future routes, not created yet:
+
+```text
+app/(public)/
+app/(auth)/
+app/(workspace)/[organizationId]/
+```
+
+Each feature owns its screen composition, components, forms, API access, and hooks:
+
+```text
+apps/web/src/features/<feature>/
+├── api/
+├── components/
+├── forms/
+├── hooks/
+├── lib/
+├── screens/
+└── index.ts
+```
+
+- `screens/` holds substantial screen composition.
+- `forms/` holds form schemas, defaults, and React Hook Form orchestration.
+- `components/` holds feature UI.
+- `api/` holds query options, mutations, and query keys.
+- `lib/` holds pure helpers for that feature.
+
+Create only the folders that feature needs.
+
+`apps/web/src/shared` is web infrastructure, not a second home for feature screens:
+
+- `shared/api` is the browser and server HTTP client and error normalization
+- `shared/auth` is session helpers, not login screens
+- `shared/config` is web runtime configuration
+- `shared/forms` is generic React Hook Form adapters
+- `shared/hooks` is hooks used by more than one feature
+- `shared/lib` is pure helpers with one cohesive purpose
+- `shared/query` is the QueryClient setup
+
+`apps/web/src/widgets` is application-shell composition, such as a sidebar or workspace header.
+
+Reusable business-independent UI belongs in `@erp/ui`.
+
+Fastify owns authoritative authorization and business use cases. Do not duplicate those use cases in Next.js Server Actions.
+
+Cross-feature imports use the feature public API:
+
+```ts
+import { CustomerPicker } from "@/features/customers";
+```
+
+Do not deep-import another feature's internal files. A feature barrel must not re-export server-only modules into the client graph.
+
+Before creating a UI component:
+
+1. Search `@erp/ui`.
+2. Search the current feature.
+3. Only then create something new.
+
+Do not manually duplicate API response or request interfaces. Use contracts from `@erp/contracts` and infer types from Zod schemas. A form schema that differs from the HTTP body stays inside the feature.
+
+`cacheComponents` and `partialPrefetching` are enabled. Tenant financial and customer data is private. Do not place it in a cache shared across sessions.
+
+Server state uses TanStack Query. Query option factories live in the feature `api/` folder. A `useX` hook is optional and stays in that feature. Forms use React Hook Form with Zod schemas where applicable. Do not introduce a global client store unless a concrete cross-feature client-state requirement exists.
