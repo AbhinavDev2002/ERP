@@ -7,7 +7,7 @@ The factory configures test runners and does not include product behavior tests.
 Vitest is configured in `apps/api` with `passWithNoTests`. Future backend coverage should be three layers:
 
 1. Use-case tests, with in-memory ports where the behavior under test is application logic.
-2. Repository integration tests against the real test database (`TEST_DATABASE_URL`, port 5433).
+2. Repository integration tests against a real PostgreSQL test database. That database is not in Compose yet. Do not point these tests at `DATABASE_URL`.
 3. HTTP integration tests through Fastify, covering validation and response mapping.
 
 Do not mock the database for repository or HTTP integration tests. Do not point those tests at the development database.

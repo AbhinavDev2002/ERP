@@ -62,3 +62,7 @@ Frontend features live under `apps/web/src/features/<feature>`. Cross-feature im
 `apps/api` must not import `@erp/ui`.
 
 Prefer explicit module boundaries over convenience.
+
+Object-oriented design belongs in the backend domain and application layers. Ports are interfaces. Entities, value objects, domain services, and use cases are classes. Infrastructure classes implement the ports. Composition constructs the concrete classes.
+
+The frontend stays function components and hooks. Do not introduce a class hierarchy for screens, forms, or server state.

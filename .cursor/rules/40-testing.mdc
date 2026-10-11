@@ -8,11 +8,11 @@ alwaysApply: false
 
 Backend tests should be split into:
 
-- use-case tests with in-memory ports
+- use-case tests with an in-memory class that implements the same port interface
 - repository integration tests against the real PostgreSQL test database
 - HTTP integration tests through the application
 
-Do not mock the database for repository or HTTP integration tests. The test database is `erp_test` on port `5433`, never the development database.
+Do not mock the database for repository or HTTP integration tests. Compose currently runs one development database. Do not point tests at it. Add a separate test database before repository integration tests.
 
 The first persistence feature must include a test where two repositories share one transaction and rollback undoes both writes.
 

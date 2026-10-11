@@ -4,16 +4,19 @@ PostgreSQL 17 is the system of record. Prisma is the ORM and migration tool.
 
 ## Local environments
 
-`docker-compose.yml` runs two isolated servers:
+`docker-compose.yml` runs one PostgreSQL 17 server:
 
-| Service         | Port | Database   | Purpose         |
-| --------------- | ---- | ---------- | --------------- |
-| `postgres`      | 5432 | `erp`      | Development     |
-| `postgres-test` | 5433 | `erp_test` | Automated tests |
+| Service    | Port | Database | Purpose     |
+| ---------- | ---- | -------- | ----------- |
+| `postgres` | 5432 | `erp`    | Development |
 
-Both use the local placeholder user and password `erp`. Those values are in `.env.example` as `DATABASE_URL` and `TEST_DATABASE_URL`. They are not production credentials. `.env` is gitignored.
+The local placeholder user and password are both `erp`. `.env.example` contains `DATABASE_URL` for host-side tools. It is not a production credential. `.env` is gitignored.
 
-Named volumes `erp_postgres` and `erp_postgres_test` keep the two data directories separate. Each service has a `pg_isready` health check.
+Named volume `erp_postgres` stores the data directory. The service has a `pg_isready` health check.
+
+Redis is also in Compose, as a cache. It is not a second system of record. See the service table in `README.md`.
+
+A separate test database is not running. Do not point tests at `DATABASE_URL`. Add a test database before repository integration tests.
 
 ## Ownership
 

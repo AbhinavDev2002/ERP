@@ -26,6 +26,8 @@ General engineering rules:
 - Never introduce `any` without explicit justification.
 - Prefer `unknown` at external boundaries and validate before use.
 - Organize code primarily by business feature.
+- Prefer the structure that is easiest to test and to change: small modules, explicit dependencies, and a seam at each boundary.
+- Prefer `interface` over `type` for object contracts you declare. Use `type` for unions, mapped types, and values inferred from Zod.
 - Reuse existing abstractions before creating new ones.
 - Keep architectural boundaries explicit.
 - Never weaken lint or TypeScript rules merely to make code compile.

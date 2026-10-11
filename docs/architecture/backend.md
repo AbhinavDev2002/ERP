@@ -36,7 +36,7 @@ Keep modules in `apps/api/src/modules/`. Do not extract them into `packages/modu
 
 `src/core` is for abstractions that would still make sense if Fastify and Prisma were replaced: entities, aggregate roots, domain events, results, pagination, and application errors.
 
-`src/platform` is for process-wide technical services: database connection, logging, cache, messaging, configuration, and observability.
+`src/platform` is for process-wide technical services: database connection, logging, cache, messaging, configuration, and observability. Configuration, the Prisma client, and the Redis client are in place. Logging adapters, messaging, and observability are not.
 
 Do not create `helpers`, `misc`, `common`, or `utils` folders for unrelated leftovers. A shared file needs one cohesive reason to exist.
 

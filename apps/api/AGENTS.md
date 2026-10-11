@@ -1,6 +1,6 @@
 # API instructions
 
-`@erp/api` is a modular monolith. There is no server entry in the factory baseline.
+`@erp/api` is a modular monolith. `src/main.ts` starts the process. `GET /health` checks PostgreSQL and Redis. Business modules are still added under `src/modules`.
 
 Keep domain and application code framework-independent.
 

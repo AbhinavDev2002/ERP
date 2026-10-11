@@ -17,7 +17,7 @@ The controller parses HTTP and calls the executor. It does not contain business 
 
 The executor is small, typed, and transport-independent. It does not import Fastify and it does not perform the business operation. It runs the pipeline and then the use case.
 
-The use case coordinates domain objects and ports. It does not open a Prisma transaction and it does not call `@prisma/client`.
+The use case is a class. Its constructor receives port interfaces. It coordinates domain objects and ports. It does not open a Prisma transaction and it does not call `@prisma/client`.
 
 ## Pipeline behaviors
 

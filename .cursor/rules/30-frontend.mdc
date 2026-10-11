@@ -83,3 +83,5 @@ Do not manually duplicate API response or request interfaces. Use contracts from
 `cacheComponents` and `partialPrefetching` are enabled. Tenant financial and customer data is private. Do not place it in a cache shared across sessions.
 
 Server state uses TanStack Query. Query option factories live in the feature `api/` folder. A `useX` hook is optional and stays in that feature. Forms use React Hook Form with Zod schemas where applicable. Do not introduce a global client store unless a concrete cross-feature client-state requirement exists.
+
+Screens, forms, and hooks are functions. Declare component props as an `interface`. Do not model the UI as classes, inheritance, or a frontend domain layer.

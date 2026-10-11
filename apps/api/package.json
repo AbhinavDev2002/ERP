@@ -6,14 +6,17 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "node --env-file=../../.env.example ./node_modules/prisma/build/index.js generate && tsc --noEmit",
+    "build": "node --env-file=../../.env.example ./node_modules/prisma/build/index.js generate && tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
     "test": "vitest run"
   },
   "dependencies": {
-    "dotenv": "^17.2.2",
     "@prisma/client": "^6.16.3",
+    "dotenv": "^17.2.2",
     "fastify": "^5.6.1",
     "pg": "^8.16.3",
     "pino": "^9.9.5",
+    "redis": "^6.3.0",
     "zod": "^4.1.8"
   },
   "devDependencies": {

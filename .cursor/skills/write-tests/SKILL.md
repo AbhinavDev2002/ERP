@@ -10,7 +10,7 @@ Match the test to the boundary under change.
 Backend:
 
 - Use-case tests drive application logic through ports. In-memory fakes are appropriate here.
-- Repository tests run against the PostgreSQL test database (`TEST_DATABASE_URL`). Do not mock Prisma for these tests.
+- Repository tests run against a real PostgreSQL test database. Do not mock Prisma for these tests. That database is not in Compose yet, so do not point repository tests at `DATABASE_URL`.
 - HTTP tests exercise routing, validation, and response mapping through the application.
 
 Frontend:

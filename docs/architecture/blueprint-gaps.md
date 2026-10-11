@@ -11,7 +11,7 @@ The repository is still a factory. Folders below are empty unless a file is name
 - Material UI and Emotion live in `@erp/ui`. `apps/web` does not depend on `@mui/*` or `@emotion/*`
 - TanStack Query, React Hook Form, and Zod are installed on `@erp/web`
 - Fastify, Zod, and Pino are installed on `@erp/api`
-- PostgreSQL 17 in Docker, with a separate test database
+- PostgreSQL 17 in Docker, one development database
 - Prisma schema at `apps/api/prisma/schema.prisma`, with no models
 - Packages `@erp/contracts`, `@erp/ui`, `@erp/eslint-config`, `@erp/typescript-config`, `@erp/test-utils`
 - Empty `apps/web/src/features`, `widgets`, and `shared` (`api`, `auth`, `config`, `forms`, `hooks`, `lib`, `query`)
@@ -40,13 +40,13 @@ No feature directory has been created (`customers`, `invoices`, `inventory`, `or
 
 ## Backend that is documented and not built
 
-| Blueprint                                                                                           | This repo                                                        |
-| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `src/bootstrap/`, `src/app.ts`, `src/main.ts`                                                       | Not present. `pnpm dev` starts only Next.js                      |
-| `modules/<feature>/` with domain, application, infrastructure, presentation                         | `src/modules/` is empty. The layout is documented, not created   |
-| UseCaseExecutor and pipeline behaviors                                                              | Documented in `docs/architecture/execution.md`. No classes exist |
-| Transaction-scoped repositories                                                                     | Documented. No repository code exists                            |
-| Modules for identity, organizations, accounting, inventory, CRM, procurement, orders, analytics, AI | Not present                                                      |
+| Blueprint                                                                                           | This repo                                                                                           |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `src/bootstrap/`, `src/app.ts`, `src/main.ts`                                                       | `src/main.ts` starts Fastify. `GET /health` is the only route. `pnpm dev` still starts only Next.js |
+| `modules/<feature>/` with domain, application, infrastructure, presentation                         | `src/modules/` is empty. The layout is documented, not created                                      |
+| UseCaseExecutor and pipeline behaviors                                                              | Documented in `docs/architecture/execution.md`. No classes exist                                    |
+| Transaction-scoped repositories                                                                     | Documented. No repository code exists                                                               |
+| Modules for identity, organizations, accounting, inventory, CRM, procurement, orders, analytics, AI | Not present                                                                                         |
 
 `core/` and `platform/` exist and are empty. They do not yet hold an executor, logger, or database client.
 
@@ -64,7 +64,7 @@ No feature directory has been created (`customers`, `invoices`, `inventory`, `or
 | Blueprint                                             | This repo                                                                                       |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Domain and use-case Vitest tests                      | Vitest is configured with `passWithNoTests`. There are no tests                                 |
-| Repository tests against PostgreSQL                   | Test database is defined. No repository tests                                                   |
+| Repository tests against PostgreSQL                   | No separate test database in Compose. No repository tests                                       |
 | Shared-transaction rollback proof                     | Required for the first persistence feature. Not written                                         |
 | Fastify `inject` HTTP tests                           | No app factory to inject                                                                        |
 | Vitest, React Testing Library, and MSW on the web app | Not installed                                                                                   |
@@ -75,13 +75,12 @@ No feature directory has been created (`customers`, `invoices`, `inventory`, `or
 
 These are not in Docker Compose, package manifests, or source:
 
-- Redis
 - BullMQ and workers
 - SSE or WebSockets
 - AWS deployment manifests
 - AI, RAG, or agent-tool packages
 
-Docker Compose only runs the development Postgres and the test Postgres.
+Docker Compose runs PostgreSQL, Redis, the API image, and the web image. Redis is a cache client in `apps/api/src/platform/cache`. It is not a job queue.
 
 ## What this comparison does not treat as a gap
 

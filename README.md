@@ -4,7 +4,7 @@ This repository is a TypeScript ERP monorepo. It is the engineering factory for 
 
 ## Applications
 
-- `@erp/api` (`apps/api`): Node.js backend. Fastify, Zod, Pino, PostgreSQL, and Prisma are installed. There is no server entry yet.
+- `@erp/api` (`apps/api`): Node.js backend. Fastify, Zod, Pino, PostgreSQL, Prisma, and Redis are installed. `src/main.ts` listens and exposes `GET /health`.
 - `@erp/web` (`apps/web`): Next.js App Router frontend. Material UI is the design-system foundation. Tailwind is not used.
 
 ## Shared packages
@@ -52,14 +52,20 @@ pnpm verify
 
 Playwright is configured in `playwright.config.ts`. It is not part of `pnpm verify` until end-to-end specs exist, because Playwright exits with an error when it finds no tests. Install browsers with `pnpm exec playwright install` before the first end-to-end run.
 
-## Local databases
+## Local services
 
-`docker-compose.yml` starts two PostgreSQL 17 databases:
+`docker compose up -d --build` from the repository root starts:
 
-- Development: `localhost:5432`, database `erp`
-- Test: `localhost:5433`, database `erp_test`
+| Service    | Address          | Role                                      |
+| ---------- | ---------------- | ----------------------------------------- |
+| `postgres` | `127.0.0.1:5432` | PostgreSQL 17 database `erp`              |
+| `redis`    | `127.0.0.1:6379` | Cache. Evicts with `allkeys-lru`. No disk |
+| `api`      | `127.0.0.1:4000` | `@erp/api`, health at `/health`           |
+| `web`      | `127.0.0.1:3000` | `@erp/web`                                |
 
-Copy `.env.example` to `.env` for local development. The credentials there are local placeholders, not production secrets.
+There is one database URL. A separate test database is not part of Compose yet. Do not point tests at the development database.
+
+Copy `.env.example` to `.env` when running the apps on the host with `pnpm dev` and `pnpm --filter @erp/api start`. Those host URLs use `localhost`. Compose replaces them with the `postgres` and `redis` service names inside the containers. The credentials are local placeholders, not production secrets.
 
 ## Cursor
 

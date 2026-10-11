@@ -25,9 +25,9 @@ Infrastructure sits beside the inward flow and implements ports declared by appl
 
 `src/core` will hold framework-independent building blocks such as `Entity`, `AggregateRoot`, `DomainEvent`, `Result`, `Pagination`, and `ApplicationError`. Those types are not implemented yet.
 
-`src/platform` will hold technical capabilities such as the database client, logging, cache, event infrastructure, configuration, and observability. Those adapters are not implemented yet.
+`src/platform` holds the process configuration, the Prisma client, and the Redis cache client. Logging beyond Fastify's Pino instance, event infrastructure, and observability are not implemented yet.
 
-There is no `main.ts` and no business module in this baseline. The first real feature should establish the canonical module layout instead of copying an empty template full of placeholders.
+`src/main.ts` starts the process and serves `GET /health`. There is no business module in this baseline. The first real feature should establish the canonical module layout instead of copying an empty template full of placeholders.
 
 ## Frontend
 

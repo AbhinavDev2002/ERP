@@ -18,13 +18,16 @@ Avoid:
 
 Prefer:
 
-- discriminated unions
+- `interface` for an object contract you declare, including ports, class contracts, and component props
+- `type` for a discriminated union, a mapped type, a tuple, or a value inferred with `z.infer`
 - readonly data where appropriate
 - exhaustive switch statements
 - explicit return types on architectural boundaries
 - schema inference from Zod
 - `unknown` for untrusted data
 
-Do not create a manual TypeScript interface if the canonical type can be inferred from an existing schema with `z.infer`.
+Do not rewrite an object contract as `type` when an `interface` can express it.
+
+Do not create a handwritten interface that duplicates a Zod schema. Infer that contract with `z.infer`.
 
 Do not weaken `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, or the other shared compiler flags to make code compile.

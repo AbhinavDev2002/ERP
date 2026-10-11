@@ -10,7 +10,7 @@ use-case tests
 + HTTP integration tests
 ```
 
-Use-case tests may fake ports. Repository tests must use `TEST_DATABASE_URL` and must not mock the database. HTTP tests must exercise the real routing and validation path.
+Use-case tests may fake ports. Repository tests must use a real PostgreSQL test database and must not mock the database. That database is not in Compose yet, so do not accept tests pointed at `DATABASE_URL`. HTTP tests must exercise the real routing and validation path.
 
 Reject a suite that mocks every layer and then claims the feature is covered.
 

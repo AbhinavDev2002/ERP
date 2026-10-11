@@ -2,7 +2,7 @@
 
 This document describes the repository as it exists after the factory bootstrap. It is a map of folders, packages, tooling, and the rules those folders are reserved for.
 
-The baseline contains structure, configuration, and guidance. It does not contain ERP business behavior: no domain entities, use cases, repositories, HTTP routes, database tables, shared Zod contracts, Material UI theme, design-system components, feature screens, or Fastify server entry.
+The baseline contains structure, configuration, and guidance. It does not contain ERP business behavior: no domain entities, use cases, repositories, business HTTP routes, database tables, shared Zod contracts, Material UI theme, design-system components, or feature screens. The API process entry is `apps/api/src/main.ts`, and its only route is `GET /health`.
 
 Package manager: pnpm `10.15.1`. Node.js: `22.17.0` or newer (`.nvmrc`).
 
@@ -138,17 +138,17 @@ Empty directories are kept with `.gitkeep` so Git tracks the layout. `node_modul
 
 ### Scripts
 
-| Script              | What it runs                                                                                                                      |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`          | `turbo dev`. Persistent and uncached. Only `@erp/web` defines `dev` (`next dev`).                                                 |
-| `pnpm build`        | `turbo build`. Depends on `^build`. Outputs are `.next/**` except the Next cache. Only `@erp/web` defines `build` (`next build`). |
-| `pnpm lint`         | `turbo lint`, which runs ESLint in each package that has a `lint` script.                                                         |
-| `pnpm typecheck`    | `turbo typecheck`. Each package runs `tsc --noEmit`. Web runs `next typegen` first so typed routes exist.                         |
-| `pnpm test`         | `turbo test`. Only `@erp/api` defines `test` (`vitest run`).                                                                      |
-| `pnpm format`       | Prettier write across the repo.                                                                                                   |
-| `pnpm format:check` | Prettier check.                                                                                                                   |
-| `pnpm arch`         | dependency-cruiser over `apps` and `packages`.                                                                                    |
-| `pnpm verify`       | format check, lint, typecheck, architecture, tests, then build.                                                                   |
+| Script              | What it runs                                                                                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm dev`          | `turbo dev`. Persistent and uncached. Only `@erp/web` defines `dev` (`next dev`).                                                                                                                |
+| `pnpm build`        | `turbo build`. Depends on `^build`. Outputs are `.next/**` except the Next cache, and `dist/**`. `@erp/web` builds Next.js. `@erp/api` generates the Prisma client and compiles `src` to `dist`. |
+| `pnpm lint`         | `turbo lint`, which runs ESLint in each package that has a `lint` script.                                                                                                                        |
+| `pnpm typecheck`    | `turbo typecheck`. Each package runs `tsc --noEmit`. Web runs `next typegen` first so typed routes exist.                                                                                        |
+| `pnpm test`         | `turbo test`. Only `@erp/api` defines `test` (`vitest run`).                                                                                                                                     |
+| `pnpm format`       | Prettier write across the repo.                                                                                                                                                                  |
+| `pnpm format:check` | Prettier check.                                                                                                                                                                                  |
+| `pnpm arch`         | dependency-cruiser over `apps` and `packages`.                                                                                                                                                   |
+| `pnpm verify`       | format check, lint, typecheck, architecture, tests, then build.                                                                                                                                  |
 
 Turbo task edges:
 
@@ -223,7 +223,7 @@ Consumers:
 
 ## `@erp/api`
 
-Node backend package. Runtime libraries are installed and unused by application code:
+Node backend package. Runtime libraries:
 
 | Dependency       | Role it will play                                             |
 | ---------------- | ------------------------------------------------------------- |
@@ -232,11 +232,12 @@ Node backend package. Runtime libraries are installed and unused by application 
 | `dotenv`         | Local environment loading                                     |
 | `pino`           | Logging                                                       |
 | `@prisma/client` | Queries inside infrastructure repositories                    |
-| `pg`             | PostgreSQL driver                                             |
+| `pg`             | PostgreSQL driver used by Prisma                              |
+| `redis`          | Cache client in `platform/cache`                              |
 
 Dev libraries: `prisma`, `tsx`, `vitest`, `typescript`, `@types/node`, `@types/pg`.
 
-Scripts: `lint`, `typecheck` (load `DATABASE_URL` from `.env.example` when it is unset, run `prisma generate`, then `tsc --noEmit`), `test`. There is no `dev` script and no `main.ts`. Nothing listens on a port.
+Scripts: `lint`, `typecheck` (load `DATABASE_URL` from `.env.example` when it is unset, run `prisma generate`, then `tsc --noEmit`), `build` (Prisma generate, then `tsc -p tsconfig.build.json`), `start` (`node dist/main.js`), and `test`. `src/main.ts` listens on port 4000. `GET /health` checks PostgreSQL and Redis. There is no `dev` script.
 
 ### `src/modules`
 
@@ -297,16 +298,19 @@ This folder is not a utility drawer. `helpers`, `misc`, `common`, and `utils` ar
 
 ### `src/platform`
 
-Empty. Reserved for process-wide technical capabilities:
+Process-wide technical capabilities. Present today:
 
-- database client (`platform/database`)
-- logging
-- cache
+- `platform/config` loads `HOST`, `PORT`, `DATABASE_URL`, and `REDIS_URL`
+- `platform/database` constructs the Prisma client
+- `platform/cache` constructs the Redis client
+
+Still reserved:
+
+- logging adapters beyond Fastify's Pino instance
 - event infrastructure
-- configuration
 - observability
 
-The database client will live here. Prisma models will not. Those stay in `apps/api/prisma/schema/` with the module that owns them.
+Prisma models do not live here. Those stay in `apps/api/prisma/schema/` with the module that owns them.
 
 ### Prisma schema
 
@@ -316,12 +320,12 @@ The database client will live here. Prisma models will not. Those stay in `apps/
 
 ### Vitest
 
-`apps/api/vitest.config.ts` uses the Node environment, includes `src/**/*.test.ts`, and sets `passWithNoTests` so `pnpm test` succeeds while the suite is empty.
+`apps/api/vitest.config.ts` uses the Node environment and includes `src/**/*.test.ts`. `passWithNoTests` remains set. Current tests cover environment parsing and `GET /health` with in-memory readiness checks.
 
 Later backend tests are three layers:
 
 1. Use-case tests, which may use in-memory ports.
-2. Repository integration tests against `TEST_DATABASE_URL`.
+2. Repository integration tests against a separate PostgreSQL test database. That database is not in Compose yet.
 3. HTTP integration tests through the real Fastify routing and validation path.
 
 Repository and HTTP tests use the test database. They do not mock Prisma, and they do not use the development database.
@@ -453,23 +457,25 @@ The package exists so later tests can share setup. It has no helpers, fixtures, 
 
 ## Database environments
 
-`docker-compose.yml` runs two PostgreSQL 17 services. Each has its own named volume and a `pg_isready` health check.
+`docker-compose.yml` runs PostgreSQL 17, Redis, the API image, and the web image. PostgreSQL has named volume `erp_postgres` and a `pg_isready` health check. Redis is a cache: `allkeys-lru`, 256mb, no persistence.
 
-| Service         | Host port | Database   | Volume              | Use             |
-| --------------- | --------- | ---------- | ------------------- | --------------- |
-| `postgres`      | 5432      | `erp`      | `erp_postgres`      | Development     |
-| `postgres-test` | 5433      | `erp_test` | `erp_postgres_test` | Automated tests |
+| Service    | Host address     | Role                             |
+| ---------- | ---------------- | -------------------------------- |
+| `postgres` | `127.0.0.1:5432` | Database `erp`                   |
+| `redis`    | `127.0.0.1:6379` | Cache                            |
+| `api`      | `127.0.0.1:4000` | Image from `apps/api/Dockerfile` |
+| `web`      | `127.0.0.1:3000` | Image from `apps/web/Dockerfile` |
 
-Local placeholder user and password are both `erp`. `.env.example` contains only:
+Local placeholder user and password are both `erp`. `.env.example` contains the host URLs:
 
 ```text
 DATABASE_URL=postgres://erp:erp@localhost:5432/erp
-TEST_DATABASE_URL=postgres://erp:erp@localhost:5433/erp_test
+REDIS_URL=redis://localhost:6379
 ```
 
-`.env` is gitignored. These values are local placeholders.
+`.env` is gitignored. These values are local placeholders. Inside Compose, the API uses `postgres` and `redis` as hostnames.
 
-Start them with `docker compose up -d` from the repository root.
+Start the stack with `docker compose up -d --build` from the repository root. A separate test database is not included.
 
 ### Persistence decisions recorded, not built
 
@@ -539,7 +545,7 @@ Files live in `.cursor/rules`. Front matter controls when each rule is applied.
 | `01-typescript.mdc`       | `**/*.{ts,tsx}`          | Unions, `unknown`, Zod inference, banned `any` and `@ts-ignore`                                             |
 | `10-architecture.mdc`     | always                   | Inward dependencies, composition, `core` versus `platform`, module and feature public APIs                  |
 | `20-backend.mdc`          | `apps/api/**/*.ts`       | Fastify, Zod, Prisma, Pino, module folders, controller and use-case duties, transactions                    |
-| `21-database.mdc`         | `apps/api/**/*.{ts,sql}` | Client versus table ownership, separate test database, audit, company scope, idempotency                    |
+| `21-database.mdc`         | `apps/api/**/*.{ts,sql}` | Client versus table ownership, one local database, audit, company scope, idempotency                        |
 | `22-api.mdc`              | `apps/api/**/*.ts`       | HTTP as presentation, contracts in `@erp/contracts`, no raw database errors                                 |
 | `30-frontend.mdc`         | `apps/web/**/*.{ts,tsx}` | App Router, self-contained features, shared infrastructure, no Tailwind or shadcn                           |
 | `31-ui-system.mdc`        | web and UI `tsx`         | MUI stack, theme tokens, spacing, breakpoints, when a wrapper is justified                                  |
@@ -557,6 +563,8 @@ Each skill is `.cursor/skills/<name>/SKILL.md`.
 | `create-frontend-feature` | Create `features/<feature>` with `api/`, `components/`, `forms/`, `hooks/`, `lib/`, and `screens/`, use `shared/` only for infrastructure, render the screen from a thin `page.tsx`, and forbid Tailwind   |
 | `write-tests`             | Match the test to the boundary. Fake ports in use-case tests. Use the real test database for repositories. Keep Playwright from replacing those tests                                                      |
 | `review-feature`          | Check layers, public imports, inferred contract types, MUI-only styling, state ownership, and that verification was actually run                                                                           |
+
+The other folders under `.cursor/skills` are third-party skills kept because they match this stack: TypeScript, Node.js, PostgreSQL, Prisma, Redis, BullMQ and cron expressions, Docker, REST API design, Next.js App Router, React performance, TanStack Query, Zod, Vitest, accessibility, and UI review. Backend design skills are `ddd-tactical-patterns`, `ddd-strategic-design`, `codebase-design`, `code-refactoring-refactor-clean`, and `tdd-workflow`. `browser-use` is kept for browser verification. Project rules still win when a third-party skill suggests another framework, Tailwind, Zustand, class-based React, or a different database. AI, marketing, and unrelated language skills are not installed.
 
 ### Agents
 
@@ -621,7 +629,7 @@ pnpm dev
 pnpm verify
 ```
 
-`pnpm dev` starts the Next.js app. The API has no server entry, so it does not start a process.
+`pnpm dev` starts the Next.js app on the host. The API process is `pnpm --filter @erp/api start` after `pnpm build`, or the `api` service in Compose.
 
 Copy `.env.example` to `.env` before a later feature needs `DATABASE_URL`.
 
@@ -636,6 +644,6 @@ The first business slice, when it is requested, is the place that fills these re
 - a feature folder under `apps/web/src/features/<feature>` with the folders that feature needs
 - a thin `app/**/page.tsx` that renders one feature screen
 - the first `@erp/ui` primitives or patterns that more than one screen would otherwise copy
-- use-case tests, a shared-transaction rollback test, repository tests against `erp_test`, and HTTP tests
+- use-case tests, a shared-transaction rollback test, repository tests against a separate test database, and HTTP tests
 
 Until that work starts, the folders above stay empty on purpose.

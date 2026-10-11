@@ -35,6 +35,22 @@ Controllers:
 - call the use case executor
 - translate results to HTTP responses
 
+The domain model is object-oriented.
+
+- Entities, value objects, and domain services are classes. They protect invariants in methods, not in loose functions that mutate plain objects.
+- Ports are `interface`s. A port lists only the operations its caller needs.
+- Use cases are classes. Their constructors receive ports. They do not construct repositories or clients.
+- Infrastructure classes implement those interfaces. They are the only classes that touch Prisma, Redis, or BullMQ.
+- The composition entry is the only place that constructs concrete infrastructure classes and injects them.
+
+Apply each design principle in the layer that can honor it:
+
+- Single responsibility: one use case class per operation. An entity owns its own rules.
+- Open/closed: add a new class or a new port implementation. Do not grow a controller with another branch of business behavior.
+- Liskov substitution: an infrastructure class must be usable everywhere its port is accepted, including in tests.
+- Interface segregation: split a wide port into the interfaces each use case actually calls.
+- Dependency inversion: domain and application depend on interfaces. Composition depends on concrete classes.
+
 Use cases:
 
 - represent a business or application operation
