@@ -5,6 +5,9 @@ import { loadEnvironment } from "./environment.js";
 const validSource = {
   DATABASE_URL: "postgres://erp:erp@localhost:5432/erp",
   REDIS_URL: "redis://localhost:6379",
+  BETTER_AUTH_SECRET: "dev-only-better-auth-secret-change-me",
+  BETTER_AUTH_URL: "http://localhost:4000",
+  WEB_ORIGIN: "http://localhost:3000",
 };
 
 describe("loadEnvironment", () => {

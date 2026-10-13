@@ -25,6 +25,8 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_API_URL=http://localhost:4000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN pnpm --filter @erp/web build
 

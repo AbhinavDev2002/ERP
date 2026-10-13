@@ -31,7 +31,7 @@ RUN pnpm --filter @erp/api build && \
   cp -r apps/api/prisma/. /out/prisma/ && \
   cd /out && \
   DATABASE_URL=postgres://erp:erp@localhost:5432/erp \
-  node /repo/apps/api/node_modules/prisma/build/index.js generate --schema=./prisma/schema.prisma
+  node /repo/apps/api/node_modules/prisma/build/index.js generate --schema=./prisma/schema
 
 FROM base AS runtime
 
