@@ -1,8 +1,29 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { PageFrame, StatusPanel } from "@erp/ui";
 
 import { WorkspaceFrame } from "@/features/organization";
 
-export default async function WorkspaceLayout({
+export default function WorkspaceLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ organizationId: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <PageFrame>
+          <StatusPanel title="Workspace">Loading the workspace.</StatusPanel>
+        </PageFrame>
+      }
+    >
+      <ResolvedWorkspace params={params}>{children}</ResolvedWorkspace>
+    </Suspense>
+  );
+}
+
+async function ResolvedWorkspace({
   children,
   params,
 }: {

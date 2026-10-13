@@ -1,6 +1,27 @@
+import { Suspense } from "react";
+import { PageFrame, StatusPanel } from "@erp/ui";
+
 import { InvitationScreen } from "@/features/organization";
 
-export default async function InvitationPage({
+export default function InvitationPage({
+  params,
+}: {
+  params: Promise<{ invitationId: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <PageFrame>
+          <StatusPanel title="Invitation">Loading the invitation.</StatusPanel>
+        </PageFrame>
+      }
+    >
+      <ResolvedInvitation params={params} />
+    </Suspense>
+  );
+}
+
+async function ResolvedInvitation({
   params,
 }: {
   params: Promise<{ invitationId: string }>;
