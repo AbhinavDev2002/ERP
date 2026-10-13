@@ -1,0 +1,23 @@
+model OrganizationProfile {
+  id             String       @id
+  organizationId String       @unique @map("organization_id")
+  legalName      String       @map("legal_name")
+  timezone       String
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_profile")
+}
+
+model OrganizationAuditEvent {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  actorUserId    String       @map("actor_user_id")
+  action         String
+  createdAt      DateTime     @default(now()) @map("created_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@map("organization_audit_event")
+}
